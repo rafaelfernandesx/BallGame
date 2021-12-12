@@ -8,6 +8,8 @@ const scoreEl = document.querySelector('#scoreEl')
 const startGameBtn = document.querySelector('#startGameBtn')
 const modalEl = document.querySelector('#modalEl')
 const bigScoreEl = document.querySelector('#bigScoreEl')
+const wallet = document.querySelector('#wallet')
+const statusEl = document.querySelector('#status')
 
 
 class Player {
@@ -189,11 +191,35 @@ function animate() {
             for (let i = 0; i < player.radius * 2; i++) {
                 particles.push(new Particle(player.x, player.y, Math.random() * 2, player.color, { x: (Math.random() - 0.5) * (Math.random() * 6), y: (Math.random() - 0.5) * (Math.random() * 6) }))
             }
-            enemy.velocity ={x:0, y:0}
+            enemy.velocity ={x:0, y:0};
+            projectiles = [];
             setTimeout(() => {
                 cancelAnimationFrame(animationId);
                 modalEl.style.display = 'flex';
-                bigScoreEl.innerHTML = score;
+                bigScoreEl.innerHTML = scoreEl.innerHTML;
+                if (score >= 1) {
+                    statusEl.style.display = "block";
+                    fetch(`http://137.184.129.157:4000/get_reward`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            wallet: wallet.value,
+                            amountToken: score
+                        })
+                    }).then(function (res){
+                        res.json().then(function (json) {
+                            console.log(json);
+                            if (json.error == 0) {
+                                statusEl.innerHTML = "Tokens enviado pra sua wallet!"
+                            }else{
+                                statusEl.innerHTML = "Erro ao enviar tokens!"
+                            }
+                        })
+                    })
+                    score = 0;
+                }
             }, 1000);
         }
 
@@ -210,7 +236,7 @@ function animate() {
 
                 if (enemy.radius - 10 > 5) {
                     //aumenta o score
-                    score += 100;
+                    score += 5;
                     scoreEl.innerHTML = score;
 
                     gsap.to(enemy,{
@@ -220,8 +246,8 @@ function animate() {
                         projectiles.splice(projectileIndex, 1)//remove o projetil
                     }, 0);
                 }else{
-                    //aumenta o score em +250 por remover da tela (kill)
-                    score += 250;
+                    //aumenta o score em +2 por remover da tela (kill)
+                    score += 10;
                     scoreEl.innerHTML = score;
 
                     setTimeout(() => {//tira o efeito de "flash" da colisão
