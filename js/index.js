@@ -212,9 +212,9 @@ function animate() {
                         res.json().then(function (json) {
                             console.log(json);
                             if (json.error == 0) {
-                                statusEl.innerHTML = "Tokens enviado pra sua wallet!"
+                                statusEl.innerHTML = `Tokens enviado pra sua wallet!<br><span class="text-sm font-normal">tx Hash:${json.data.transactionHash}</span>`;
                             }else{
-                                statusEl.innerHTML = "Erro ao enviar tokens!"
+                                statusEl.innerHTML = `Erro ao enviar tokens!<br><span class="text-sm font-normal">${json.error}</span>`;
                             }
                         })
                     })

@@ -18,7 +18,6 @@ app.use(cors({ origin: '*' }));
 
 
 app.get('/', async function (req, res) {
-
     res.send({msh: 'Ola'});
 })
 
@@ -28,8 +27,12 @@ app.post('/get_reward', async function (req, res) {
     const amountToken = `${req.body.amountToken}`;
     let resp = {data: [], error:0};
     if (wallet && amountToken) {
-        let result = await sendToken(wallet, amountToken);
-        resp.data = result
+        try {
+            let result = await sendToken(wallet, amountToken);
+            resp.data = result
+        } catch (err) {
+            resp.error = err.message;
+        }
     }else{
         resp.error = "Wallet or Amount are empty";
     }
