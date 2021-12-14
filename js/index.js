@@ -271,8 +271,8 @@ let full = false;
 var keysPressed = [];
 
 addEventListener('keydown', (event) => {
-    let key = event.which || event.keyCode;
-    if (key === 101) {
+
+    if (event.key === 'e') {
         full = !full;
         console.log(full)
         if (full) {
@@ -327,14 +327,6 @@ addEventListener('keydown', (event) => {
     }
 })
 
-
-addEventListener('keydown', (event) => {
-
-
-    if (keysPressed['Control'] && event.key == 'c') {
-        console.log(event.key);
-    }
-});
 addEventListener('keyup', (event) => {
     delete keysPressed[event.key];
 });
@@ -348,7 +340,6 @@ function removeFireToWindown() {
 }
 
 function fire(event) {
-    console.log(event);
     const angle = Math.atan2(event.clientY - player.y, event.clientX - player.x);
     const velocity = {
         x: Math.cos(angle) * 5,
