@@ -72,8 +72,13 @@ class Enemy {
 
     update() {
         this.draw();
-        this.x += this.velocity.x;
-        this.y += this.velocity.y;
+        const angle = Math.atan2(player.y - this.y, player.x - this.x);
+        const velocity = {
+            x: Math.cos(angle),
+            y: Math.sin(angle)
+        }
+        this.x += velocity.x;
+        this.y += velocity.y;
     }
 }
 
@@ -111,7 +116,7 @@ class Particle {
 const x = canvas.width / 2;
 const y = canvas.height / 2;
 
-let player = new Player(x,y, 10, 'white');
+let player = null;//new Player(x,y, 10, 'white');
 let projectiles = [];
 let enemies = [];
 let particles = [];
@@ -129,25 +134,25 @@ function init() {
 function spawnEnemies() {
 
     setInterval(() => {
-        const radius = Math.random() * (30 -8) +8;
-        let x
-        let y
-        if (Math.random() > 0.5) {
-            x = Math.random() < 0.5 ? 0 - radius : canvas.width + radius;
-            y = Math.random() * canvas.height;
-        }else{
-            x = Math.random() * canvas.width;
-            y = Math.random() < 0.5 ? 0 - radius : canvas.height + radius;
-        }
-        const color = `hsl(${Math.random() * 360}, 50%, 50%)`;
+    const radius = Math.random() * (30 - 8) + 8;
+    let x
+    let y
+    if (Math.random() > 0.5) {
+        x = Math.random() < 0.5 ? 0 - radius : canvas.width + radius;
+        y = Math.random() * canvas.height;
+    } else {
+        x = Math.random() * canvas.width;
+        y = Math.random() < 0.5 ? 0 - radius : canvas.height + radius;
+    }
+    const color = `hsl(${Math.random() * 360}, 50%, 50%)`;
 
-        const angle = Math.atan2(canvas.height / 2 -y, canvas.width / 2 -x);
-        const velocity = {
-            x: Math.cos(angle),
-            y: Math.sin(angle)
-        }
+    const angle = Math.atan2(canvas.height / 2 - y, canvas.width / 2 - x);
+    const velocity = {
+        x: Math.cos(angle)  * 1.5,
+        y: Math.sin(angle)  * 1.5
+    }
 
-        enemies.push(new Enemy(x, y, radius, color, velocity));
+    enemies.push(new Enemy(x, y, radius, color, velocity));
     }, 1000);
 }
 
@@ -156,12 +161,12 @@ let score = 0;
 function animate() {
     animationId = requestAnimationFrame(animate);
     c.fillStyle = 'rgba(0,0,0,0.1)'
-    c.fillRect(0,0, canvas.width, canvas.height);
+    c.fillRect(0, 0, canvas.width, canvas.height);
     player.draw();
     particles.forEach((particle, particleIndex) => {
         if (particle.alpha <= 0) {
             particles.splice(particleIndex, 1)
-        }else{
+        } else {
             particle.update()
         }
     });
@@ -171,7 +176,7 @@ function animate() {
 
         //remove os projectil da tela
         if (projectile.x + projectile.radius < 0 ||
-            projectile.x - projectile.radius >  canvas.width ||
+            projectile.x - projectile.radius > canvas.width ||
             projectile.y + projectile.radius < 0 ||
             projectile.y - projectile.radius > canvas.height) {
             setTimeout(() => {//tira o efeito de "flash" da colisão
@@ -191,7 +196,8 @@ function animate() {
             for (let i = 0; i < player.radius * 2; i++) {
                 particles.push(new Particle(player.x, player.y, Math.random() * 2, player.color, { x: (Math.random() - 0.5) * (Math.random() * 6), y: (Math.random() - 0.5) * (Math.random() * 6) }))
             }
-            enemy.velocity ={x:0, y:0};
+
+            enemy.velocity = { x: 0, y: 0 };
             projectiles = [];
             setTimeout(() => {
                 cancelAnimationFrame(animationId);
@@ -199,25 +205,25 @@ function animate() {
                 bigScoreEl.innerHTML = scoreEl.innerHTML;
                 if (score >= 1) {
                     statusEl.style.display = "block";
-                    fetch(`http://137.184.129.157:4000/get_reward`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            wallet: wallet.value,
-                            amountToken: score
-                        })
-                    }).then(function (res){
-                        res.json().then(function (json) {
-                            console.log(json);
-                            if (json.error == 0) {
-                                statusEl.innerHTML = `Tokens enviado pra sua wallet!<br><span class="text-sm font-normal">tx Hash:${json.data.transactionHash}</span>`;
-                            }else{
-                                statusEl.innerHTML = `Erro ao enviar tokens!<br><span class="text-sm font-normal">${json.error}</span>`;
-                            }
-                        })
-                    })
+                    // fetch(`http://137.184.129.157:4000/get_reward`, {
+                    //     method: 'POST',
+                    //     headers: {
+                    //         'Content-Type': 'application/json'
+                    //     },
+                    //     body: JSON.stringify({
+                    //         wallet: wallet.value,
+                    //         amountToken: score
+                    //     })
+                    // }).then(function (res){
+                    //     res.json().then(function (json) {
+                    //         console.log(json);
+                    //         if (json.error == 0) {
+                    //             statusEl.innerHTML = `Tokens enviado pra sua wallet!<br><span class="text-sm font-normal">tx Hash:${json.data.transactionHash}</span>`;
+                    //         }else{
+                    //             statusEl.innerHTML = `Erro ao enviar tokens!<br><span class="text-sm font-normal">${json.error}</span>`;
+                    //         }
+                    //     })
+                    // })
                     score = 0;
                 }
             }, 1000);
@@ -230,8 +236,8 @@ function animate() {
             if (distProjectileEnemy - enemy.radius - projectile.radius < 1) {
 
                 //cria o efeito de explosão
-                for (let i = 0; i < enemy.radius*2; i++) {
-                    particles.push(new Particle(projectile.x, projectile.y, Math.random() * 2, enemy.color, { x: (Math.random() - 0.5) * (Math.random() * 6), y: (Math.random() - 0.5) * (Math.random() * 6)}))
+                for (let i = 0; i < enemy.radius * 2; i++) {
+                    particles.push(new Particle(projectile.x, projectile.y, Math.random() * 2, enemy.color, { x: (Math.random() - 0.5) * (Math.random() * 6), y: (Math.random() - 0.5) * (Math.random() * 6) }))
                 }
 
                 if (enemy.radius - 10 > 5) {
@@ -239,20 +245,20 @@ function animate() {
                     score += 5;
                     scoreEl.innerHTML = score;
 
-                    gsap.to(enemy,{
+                    gsap.to(enemy, {
                         radius: enemy.radius - 10
                     })
                     setTimeout(() => {//tira o efeito de "flash" da colisão
                         projectiles.splice(projectileIndex, 1)//remove o projetil
                     }, 0);
-                }else{
+                } else {
                     //aumenta o score em +2 por remover da tela (kill)
                     score += 10;
                     scoreEl.innerHTML = score;
 
                     setTimeout(() => {//tira o efeito de "flash" da colisão
-                        enemies.splice(enemyIndex,1)//remove o inimigo
-                        projectiles.splice(projectileIndex,1)//remove o projetil
+                        enemies.splice(enemyIndex, 1)//remove o inimigo
+                        projectiles.splice(projectileIndex, 1)//remove o projetil
                     }, 0);
                 }
             }
@@ -262,23 +268,76 @@ function animate() {
 }
 
 let full = false;
+var keysPressed = [];
 
-addEventListener('keypress', (event) =>{
+addEventListener('keydown', (event) => {
     let key = event.which || event.keyCode;
     if (key === 101) {
         full = !full;
         console.log(full)
+        if (full) {
+            addEventListener('mousedown', addFireToWindown)
+            addEventListener('mouseup', removeFireToWindown)
+        } else {
+            window.removeEventListener('mousedown', addFireToWindown)
+            window.removeEventListener('mouseup', removeFireToWindown)
+            window.removeEventListener('mousemove', fire)
+        }
     }
 
-    if (full) {
-        addEventListener('mousedown', addFireToWindown)
-        addEventListener('mouseup', removeFireToWindown)
-    }else{
-        window.removeEventListener('mousedown', addFireToWindown)
-        window.removeEventListener('mouseup', removeFireToWindown)
-        window.removeEventListener('mousemove', fire)
+    keysPressed[event.key] = true;
+    switch (event.key) {
+        case 'a':
+            //esquerda
+            player.x -= 10;
+            break;
+        case 'd':
+            //direita
+            player.x += 10;
+            break;
+        case 'w':
+            //cima
+            player.y -= 10;
+            break;
+        case 's':
+            //baixo
+            player.y += 10;
+            break;
+    }
+
+    if ((event.key == 'w' && keysPressed['d']) || (event.key == 'd' && keysPressed['w'])) {
+        //cima e direita
+        player.x += 10;
+        player.y -= 10;
+    }
+    if ((event.key == 'w' && keysPressed['a']) || (event.key == 'd' && keysPressed['a'])) {
+        //cima e esquerda
+        player.x -= 10;
+        player.y -= 10;
+    }
+    if ((event.key == 's' && keysPressed['a']) || (event.key == 'a' && keysPressed['s'])) {
+        //baixo e esquerda
+        player.x -= 10;
+        player.y += 10;
+    }
+    if ((event.key == 's' && keysPressed['d']) || (event.key == 'd' && keysPressed['s'])) {
+        //baixo e direita
+        player.x += 10;
+        player.y += 10;
     }
 })
+
+
+addEventListener('keydown', (event) => {
+
+
+    if (keysPressed['Control'] && event.key == 'c') {
+        console.log(event.key);
+    }
+});
+addEventListener('keyup', (event) => {
+    delete keysPressed[event.key];
+});
 
 function addFireToWindown() {
     window.addEventListener('mousemove', fire)
@@ -288,8 +347,9 @@ function removeFireToWindown() {
     window.addEventListener('mousemove', fire)
 }
 
-function fire(event){
-    const angle = Math.atan2(event.clientY - canvas.height / 2, event.clientX - canvas.width / 2);
+function fire(event) {
+    console.log(event);
+    const angle = Math.atan2(event.clientY - player.y, event.clientX - player.x);
     const velocity = {
         x: Math.cos(angle) * 5,
         y: Math.sin(angle) * 5
@@ -300,7 +360,7 @@ function fire(event){
 
 addEventListener('click', fire)
 
-startGameBtn.addEventListener('click', () =>{
+startGameBtn.addEventListener('click', () => {
     init()
     animate();
     spawnEnemies();
